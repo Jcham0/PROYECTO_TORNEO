@@ -1,0 +1,56 @@
+{% extends 'torneo/base.html' %}
+
+{% block title %}Clasificación | Torneo de videojuegos{% endblock %}
+
+{% block content %}
+    <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="text-sm font-semibold uppercase tracking-wider text-indigo-600">Resultados del torneo</p>
+            <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Clasificación</h1>
+            <p class="mt-2 text-slate-600">Posiciones y rendimiento de los participantes.</p>
+        </div>
+        <a class="inline-flex w-fit items-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700" href="{% url 'torneo:graficas' %}">Ver gráficas</a>
+    </div>
+    <div class="space-y-6">
+        {% for clasificacion in clasificaciones %}
+            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-100 px-5 py-4 sm:px-6">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Torneo</p>
+                    <h2 class="mt-1 text-xl font-bold text-slate-900">{{ clasificacion.torneo.nombre }}</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[640px] text-left text-sm">
+                        <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                            <tr>
+                                <th scope="col">Nick</th>
+                                <th scope="col">Jugados</th>
+                                <th scope="col">Ganados</th>
+                                <th scope="col">Perdidos</th>
+                                <th scope="col">Empatados</th>
+                                <th scope="col">Puntos</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for participante in clasificacion.participantes %}
+                                <tr class="transition hover:bg-indigo-50/50">
+                                    <td class="whitespace-nowrap px-5 py-4 font-semibold text-slate-900 sm:px-6">{{ participante.nick }}</td>
+                                    <td class="px-5 py-4 text-slate-600">{{ participante.jugados }}</td>
+                                    <td class="px-5 py-4 text-slate-600">{{ participante.ganados }}</td>
+                                    <td class="px-5 py-4 text-slate-600">{{ participante.perdidos }}</td>
+                                    <td class="px-5 py-4 text-slate-600">{{ participante.empatados }}</td>
+                                    <td class="px-5 py-4"><span class="inline-flex min-w-10 justify-center rounded-lg bg-indigo-50 px-2.5 py-1 font-bold text-indigo-700">{{ participante.puntos }}</span></td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td class="px-5 py-8 text-center text-slate-500 sm:px-6" colspan="6">Todavía no hay resultados registrados.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        {% empty %}
+            <p class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-600 shadow-sm">Aún no hay torneos para mostrar.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

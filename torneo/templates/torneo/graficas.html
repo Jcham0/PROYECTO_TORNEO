@@ -1,0 +1,58 @@
+{% extends 'torneo/base.html' %}
+
+{% block title %}Gráficas | Torneo de videojuegos{% endblock %}
+
+{% block content %}
+    <div class="mb-8">
+        <p class="text-sm font-semibold uppercase tracking-wider text-indigo-600">Analítica del torneo</p>
+        <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Gráficas de resultados</h1>
+        <p class="mt-2 text-slate-600">Explora los puntos y las victorias de cada participante.</p>
+    </div>
+    {% if clasificaciones %}
+        <section class="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <form class="flex flex-col gap-4 sm:flex-row sm:items-end" action="{% url 'torneo:graficas' %}" method="get">
+                <div class="w-full sm:max-w-sm">
+                    <label class="mb-2 block text-sm font-semibold text-slate-700" for="torneo">Selecciona un torneo</label>
+                    <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100" id="torneo" name="torneo">
+                        {% for clasificacion in clasificaciones %}
+                            <option
+                                value="{{ clasificacion.torneo.pk }}"
+                                {% if clasificacion_seleccionada.torneo.pk == clasificacion.torneo.pk %}selected{% endif %}
+                            >
+                                {{ clasificacion.torneo.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200" type="submit">Ver analítica</button>
+            </form>
+        </section>
+
+        {% if clasificacion_seleccionada %}
+            <div class="mb-5">
+                <h2 class="text-2xl font-bold text-slate-900">{{ clasificacion_seleccionada.torneo.nombre }}</h2>
+                <p class="mt-1 text-sm text-slate-500">Estadísticas generales del torneo</p>
+            </div>
+            {% if clasificacion_seleccionada.participantes %}
+                <div class="grid gap-6">
+                    <figure class="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5">
+                        <figcaption class="mb-3 px-1 text-sm font-semibold text-slate-700">Puntos por participante</figcaption>
+                        <img class="h-auto w-full rounded-xl" src="{% url 'torneo:grafica_torneo' clasificacion_seleccionada.torneo.pk %}" alt="Puntos por participante en {{ clasificacion_seleccionada.torneo.nombre }}">
+                    </figure>
+                    <figure class="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5">
+                        <figcaption class="mb-3 px-1 text-sm font-semibold text-slate-700">Victorias por participante</figcaption>
+                        <img class="h-auto w-full rounded-xl" src="{% url 'torneo:grafica_victorias_torneo' clasificacion_seleccionada.torneo.pk %}" alt="Victorias por participante en {{ clasificacion_seleccionada.torneo.nombre }}">
+                    </figure>
+                </div>
+            {% else %}
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 shadow-sm">
+                    <p class="font-semibold">Todavía no hay resultados registrados para este torneo.</p>
+                    <p class="mt-1">Cuando se registren partidas, aparecerán aquí las gráficas de puntos y victorias.</p>
+                    <p class="mt-1">No hay resultados para comparar las victorias de este torneo.</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    {% else %}
+        <p class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-600 shadow-sm">Aún no hay torneos para mostrar.</p>
+    {% endif %}
+{% endblock %}

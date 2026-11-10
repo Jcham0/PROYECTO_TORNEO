@@ -1,0 +1,37 @@
+{% extends 'torneo/base.html' %}
+
+{% block title %}Inicio | Torneo Arena{% endblock %}
+
+{% block content %}
+    <section class="overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-indigo-950 to-indigo-700 px-6 py-12 text-white shadow-xl sm:px-10 sm:py-16">
+        <div class="max-w-3xl">
+            <p class="mb-4 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-100">Compite · Conecta · Gana</p>
+            <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">Tu próximo torneo empieza aquí.</h1>
+            <p class="mt-5 max-w-2xl text-base leading-7 text-indigo-100 sm:text-lg">
+                Organiza tus partidas, sigue los resultados y descubre quién lidera la clasificación.
+            </p>
+            <p class="mt-3 text-sm text-indigo-200">La aplicación de torneo está funcionando.</p>
+            <div class="mt-8 flex flex-wrap gap-3">
+                <a class="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-indigo-800 shadow-sm transition hover:bg-indigo-50" href="{% url 'torneo:clasificacion' %}">Ver clasificación</a>
+                <a class="rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10" href="{% url 'torneo:graficas' %}">Explorar gráficas</a>
+            </div>
+        </div>
+    </section>
+    <section class="mt-8 grid gap-4 sm:grid-cols-3">
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <p class="text-sm font-semibold text-indigo-600">01 · Participa</p>
+            <h2 class="mt-2 text-lg font-bold text-slate-900">Encuentra tu torneo</h2>
+            <p class="mt-2 text-sm leading-6 text-slate-600">Consulta los torneos abiertos y gestiona tus inscripciones desde tu zona personal.</p>
+        </article>
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <p class="text-sm font-semibold text-teal-700">02 · Compite</p>
+            <h2 class="mt-2 text-lg font-bold text-slate-900">Sigue los resultados</h2>
+            <p class="mt-2 text-sm leading-6 text-slate-600">Cada partida cuenta y actualiza la clasificación del torneo correspondiente.</p>
+        </article>
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <p class="text-sm font-semibold text-violet-600">03 · Analiza</p>
+            <h2 class="mt-2 text-lg font-bold text-slate-900">Visualiza tu progreso</h2>
+            <p class="mt-2 text-sm leading-6 text-slate-600">Compara puntos y victorias con gráficas claras y fáciles de consultar.</p>
+        </article>
+    </section>
+{% endblock %}

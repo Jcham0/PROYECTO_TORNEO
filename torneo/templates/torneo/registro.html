@@ -1,0 +1,33 @@
+{% extends 'torneo/base.html' %}
+
+{% block title %}Registrarse | Torneo de videojuegos{% endblock %}
+
+{% block content %}
+    <section class="mx-auto max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="bg-gradient-to-r from-indigo-700 to-violet-700 px-6 py-7 text-white sm:px-8">
+            <p class="text-sm font-semibold text-indigo-100">Forma parte de la comunidad</p>
+            <h1 class="mt-1 text-2xl font-bold">Registro de participante</h1>
+            <p class="mt-2 text-sm text-indigo-100">Crea tu cuenta para apuntarte a los torneos.</p>
+        </div>
+        <form class="space-y-4 p-6 sm:p-8" method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800" role="alert">{{ form.non_field_errors }}</div>
+            {% endif %}
+            {% for field in form %}
+                <div>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="mt-1 block text-sm text-slate-500">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <p class="mt-1 text-sm text-rose-700" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <button class="w-full rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200" type="submit">Crear cuenta</button>
+            <p class="text-center text-sm text-slate-500">¿Ya tienes una cuenta? <a class="font-semibold text-indigo-700 hover:text-indigo-900" href="{% url 'torneo:login' %}">Inicia sesión</a></p>
+        </form>
+    </section>
+{% endblock %}

@@ -16,6 +16,7 @@
 4. Modelo de datos
 5. Requisitos funcionales
 6. Vistas y rutas
+   - 6.3 Acceso del profesor al panel de administración
 7. Criterios de acceso y visibilidad
 8. Manual de instalación
 9. Retos técnicos e incidencias
@@ -31,6 +32,10 @@ abiertas sus inscripciones. El personal puede registrar resultados mediante
 un formulario que aplica las validaciones del modelo. La Fase 8 incorpora una
 gráfica pública de puntos y otra de victorias por participante para cada
 torneo. La interfaz se presenta con un diseño responsive basado en Tailwind CSS.
+En la Fase 7, pedido 4 de 4, se añadió una relación opcional y uno a uno entre
+`Enfrentamiento` y `Resultado`, validada también desde la administración.
+La Fase 11 completa la documentación técnica e incorpora el diagrama entidad-
+relación validado con los modelos.
 
 ## Objetivos y alcance
 
@@ -45,8 +50,9 @@ sin guardar estadísticas. Las páginas principales usan una presentación
 responsive con Tailwind CSS. La Fase 9 incorpora el comando de datos de
 demostración. En la Fase 10, una suite de pruebas unitarias y de integración
 basadas en `django.test.TestCase` verifica modelos, formularios, vistas públicas,
-permisos, administración y gráficas. Queda pendiente la Fase 11 según el mapa
-del proyecto.
+permisos, administración y gráficas. La suite contiene 82 pruebas aprobadas.
+La Fase 11 completa la documentación técnica final y registra la revisión de la
+arquitectura y el código.
 
 ## Tecnologías y alternativas
 
@@ -76,14 +82,27 @@ La aplicación tiene seis modelos propios:
 | `Participante` | `nick` único y `nivel` (`amateur`, `normal` o `expert`; inicia en `amateur`) | Relación uno a uno con el usuario de Django; el email se guarda en la cuenta. Los puntos no se almacenan en el participante: se calculan desde `Resultado`. |
 | `Torneo` | `nombre`, `descripcion` opcional e `inscripciones_abiertas` (inicia en verdadero) | El administrador puede abrir o cerrar las inscripciones. |
 | `Inscripcion` | `fecha_inscripcion` automática | Relaciona un participante con un torneo; la base de datos impide duplicar la pareja. |
-| `Enfrentamiento` | `fecha` automática y `finalizado` (inicia en falso) | Pertenece a un juego y tiene dos participantes; el ganador es opcional. |
-| `Resultado` | `puntos_a`, `puntos_b`, `fecha` y `ronda` | Relaciona dos inscripciones de un torneo; valida que sean participantes distintos y pertenezcan al torneo. Calcula ganador y puntos de clasificación 3/1/0. |
+| `Enfrentamiento` | `fecha` automática, `finalizado` (inicia en falso) y `resultado` opcional | Pertenece a un juego y tiene dos participantes; el ganador es opcional. `resultado` es una relación uno a uno con `Resultado`; comprueba que sus jugadores coincidan con los participantes del resultado en cualquier orden y que el ganador sea coherente. |
+| `Resultado` | `puntos_a`, `puntos_b`, `fecha` y `ronda` | Relaciona dos inscripciones de un torneo; valida que sean participantes distintos y pertenezcan al torneo. Calcula ganador y puntos de clasificación 3/1/0. Puede estar vinculado a un único enfrentamiento. |
+
+![Diagrama Entidad-Relación](assets/diagrama_ER.png)
+
+El esquema relaciona `Torneo` con sus `Inscripcion` y `Resultado`, mientras que
+cada `Inscripcion` vincula un participante con un torneo. `Enfrentamiento`
+registra un juego, dos participantes y un ganador opcional; puede vincularse a
+un único `Resultado`, que pertenece a un torneo y referencia las inscripciones
+de ambos participantes. `Participante` se relaciona uno a uno con una cuenta de
+usuario de Django.
 
 Las claves foráneas de juego y participantes eliminan sus enfrentamientos
 relacionados cuando se elimina el registro correspondiente. Si se elimina solo
-el ganador, el enfrentamiento se conserva sin ganador. Al borrar un torneo o
-participante también se eliminan sus inscripciones relacionadas. Django
-mantiene además sus modelos internos de administración, usuarios y sesiones.
+el ganador, el enfrentamiento se conserva sin ganador. Al eliminar un
+`Resultado`, el `Enfrentamiento` asociado se conserva y su campo `resultado`
+queda vacío (`NULL`). La migración no relaciona automáticamente los datos
+anteriores: los enfrentamientos existentes quedan sin resultado. Al borrar un
+torneo o participante también se eliminan sus inscripciones relacionadas.
+Django mantiene además sus modelos internos de administración, usuarios y
+sesiones.
 
 ## Requisitos funcionales
 
@@ -183,6 +202,17 @@ se definan y verifiquen en sus fases.
 - `/admin/torneo/resultado/`: la vista `ResultadoAdmin` permite consultar,
   buscar y ordenar resultados.
 
+### 6.3 Acceso del profesor al panel de administración
+
+El panel de evaluación está disponible en <http://127.0.0.1:8000/admin/>.
+Las credenciales facilitadas para el curso son:
+
+- **Usuario:** `JuanAntonio`
+- **Contraseña:** `Juanito7,.,.`
+
+Estas credenciales son exclusivamente para el entorno de evaluación y no deben
+reutilizarse en producción ni en otros servicios.
+
 ## Criterios de acceso y visibilidad
 
 El panel `/admin/` utiliza la autenticación y los permisos integrados de
@@ -244,6 +274,12 @@ de demostración; estas credenciales son solo para desarrollo local.
 - En la Fase 7 se conectó `ResultadoForm` con el modelo `Resultado`. La
   validación existente del modelo se refleja en errores de campo en la
   plantilla y el acceso de escritura se limita al personal del sitio.
+- En la Fase 7, pedido 4 de 4, `Enfrentamiento.resultado` se añadió como
+  `OneToOneField` opcional a `Resultado` con `SET_NULL`. La migración
+  `0006_enfrentamiento_resultado.py` solo cambia el esquema: los encuentros
+  anteriores permanecen sin vínculo. `Enfrentamiento.clean()` comprueba los
+  participantes y el ganador, y `save()` ejecuta `full_clean()`. El admin
+  carga el resultado y sus relaciones con `list_select_related`.
 - La clasificación de la Fase 7 agrupa los resultados por torneo y calcula sus
   estadísticas en memoria, reutilizando `Resultado.ganador` y
   `puntos_clasificacion_a`/`puntos_clasificacion_b`. No se modifica ni se
@@ -273,13 +309,17 @@ de demostración; estas credenciales son solo para desarrollo local.
   `Resultado.clean()` para participantes repetidos e inscripciones de otro
   torneo, y valida la asociación de campos y errores de `ResultadoForm`.
   También comprueba la clasificación pública, respuestas PNG `image/png`,
-  escenarios sin resultados, permisos, registro y administración. La ejecución
-  completa registra 76 pruebas correctas; las comprobaciones de Django y
+  escenarios sin resultados, permisos, registro y administración. Tras el
+  evolutivo de la Fase 7, pedido 4 de 4, la ejecución completa registra 82
+  pruebas correctas; las comprobaciones de Django y
   migraciones también finalizan sin incidencias.
 - Para reducir consultas N+1, `ResultadoForm` selecciona las relaciones
   `torneo` y `participante` de sus opciones; los listados del admin cargan las
   relaciones visibles con `list_select_related`. Se probaron los números de
   consultas de clasificación, zona del participante, formulario y listados.
+- **Revisión manual completada el 11/11/2026:** se cotejaron el modelo de datos
+  y su esquema, el apartado de evolutivos y el número de pruebas (82) con el
+  código y las verificaciones ejecutadas.
 - `settings.py` admite la configuración de producción mediante variables de
   entorno. `check --deploy` en modo local conserva advertencias de desarrollo;
   en una configuración de producción simulada queda la advertencia HSTS

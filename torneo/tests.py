@@ -884,6 +884,7 @@ class ModelosTorneoTests(TestCase):
                 'jugador_1',
                 'jugador_2',
                 'ganador',
+                'resultado',
                 'finalizado',
                 'fecha',
             ),
@@ -926,7 +927,7 @@ class ModelosTorneoTests(TestCase):
             torneo=torneo,
             participante=self.jugador_2,
         )
-        Resultado.objects.create(
+        resultado = Resultado.objects.create(
             torneo=torneo,
             inscripcion_a=inscripcion_1,
             inscripcion_b=inscripcion_2,
@@ -938,6 +939,21 @@ class ModelosTorneoTests(TestCase):
             jugador_1=self.jugador_1,
             jugador_2=self.jugador_2,
             ganador=self.jugador_1,
+            resultado=resultado,
+        )
+        segundo_resultado = Resultado.objects.create(
+            torneo=torneo,
+            inscripcion_a=inscripcion_1,
+            inscripcion_b=inscripcion_2,
+            puntos_a=0,
+            puntos_b=2,
+        )
+        Enfrentamiento.objects.create(
+            juego=self.juego,
+            jugador_1=self.jugador_1,
+            jugador_2=self.jugador_2,
+            ganador=self.jugador_2,
+            resultado=segundo_resultado,
         )
         resolver_relaciones = {
             Participante: lambda objeto: (
@@ -953,6 +969,9 @@ class ModelosTorneoTests(TestCase):
                 objeto.jugador_1.nick,
                 objeto.jugador_2.nick,
                 objeto.ganador.nick,
+                objeto.resultado.torneo.nombre,
+                objeto.resultado.inscripcion_a.participante.nick,
+                objeto.resultado.inscripcion_b.participante.nick,
             ),
             Resultado: lambda objeto: (
                 objeto.torneo.nombre,
@@ -1107,6 +1126,135 @@ class ModeloResultadoTests(TestCase):
                     'La inscripción debe pertenecer al torneo del resultado.',
                 ],
             },
+        )
+
+
+class EnfrentamientoResultadoTests(TestCase):
+    def setUp(self):
+        usuario_a = get_user_model().objects.create_user(
+            username='jugador-enfrentamiento-a',
+            password='clave-de-prueba',
+        )
+        usuario_b = get_user_model().objects.create_user(
+            username='jugador-enfrentamiento-b',
+            password='clave-de-prueba',
+        )
+        usuario_c = get_user_model().objects.create_user(
+            username='jugador-enfrentamiento-c',
+            password='clave-de-prueba',
+        )
+        self.jugador_a = Participante.objects.create(
+            usuario=usuario_a,
+            nick='EnfrentamientoA',
+        )
+        self.jugador_b = Participante.objects.create(
+            usuario=usuario_b,
+            nick='EnfrentamientoB',
+        )
+        self.jugador_c = Participante.objects.create(
+            usuario=usuario_c,
+            nick='EnfrentamientoC',
+        )
+        self.torneo = Torneo.objects.create(
+            nombre='Torneo de enfrentamientos',
+        )
+        self.inscripcion_a = Inscripcion.objects.create(
+            torneo=self.torneo,
+            participante=self.jugador_a,
+        )
+        self.inscripcion_b = Inscripcion.objects.create(
+            torneo=self.torneo,
+            participante=self.jugador_b,
+        )
+        self.juego = Juego.objects.create(nombre='Juego de enfrentamientos')
+
+    def _crear_resultado(self, puntos_a=3, puntos_b=1):
+        return Resultado.objects.create(
+            torneo=self.torneo,
+            inscripcion_a=self.inscripcion_a,
+            inscripcion_b=self.inscripcion_b,
+            puntos_a=puntos_a,
+            puntos_b=puntos_b,
+        )
+
+    def test_enfrentamiento_sin_resultado_es_valido(self):
+        enfrentamiento = Enfrentamiento.objects.create(
+            juego=self.juego,
+            jugador_1=self.jugador_a,
+            jugador_2=self.jugador_b,
+        )
+
+        self.assertIsNone(enfrentamiento.resultado)
+
+    def test_acepta_resultado_coherente_con_jugadores_en_cualquier_orden(self):
+        resultado = self._crear_resultado()
+        enfrentamiento = Enfrentamiento.objects.create(
+            juego=self.juego,
+            jugador_1=self.jugador_b,
+            jugador_2=self.jugador_a,
+            ganador=self.jugador_a,
+            resultado=resultado,
+        )
+
+        self.assertEqual(enfrentamiento.resultado, resultado)
+
+    def test_rechaza_jugadores_distintos_a_los_del_resultado(self):
+        enfrentamiento = Enfrentamiento(
+            juego=self.juego,
+            jugador_1=self.jugador_a,
+            jugador_2=self.jugador_c,
+            resultado=self._crear_resultado(),
+        )
+
+        with self.assertRaises(ValidationError) as error:
+            enfrentamiento.save()
+
+        self.assertIn('resultado', error.exception.message_dict)
+
+    def test_rechaza_ganador_distinto_al_del_resultado(self):
+        enfrentamiento = Enfrentamiento(
+            juego=self.juego,
+            jugador_1=self.jugador_a,
+            jugador_2=self.jugador_b,
+            ganador=self.jugador_b,
+            resultado=self._crear_resultado(),
+        )
+
+        with self.assertRaises(ValidationError) as error:
+            enfrentamiento.save()
+
+        self.assertIn('ganador', error.exception.message_dict)
+
+    def test_rechaza_ganador_en_un_resultado_empatado(self):
+        enfrentamiento = Enfrentamiento(
+            juego=self.juego,
+            jugador_1=self.jugador_a,
+            jugador_2=self.jugador_b,
+            ganador=self.jugador_a,
+            resultado=self._crear_resultado(puntos_a=2, puntos_b=2),
+        )
+
+        with self.assertRaises(ValidationError) as error:
+            enfrentamiento.save()
+
+        self.assertIn('ganador', error.exception.message_dict)
+
+    def test_al_borrar_el_resultado_se_conserva_el_enfrentamiento(self):
+        resultado = self._crear_resultado()
+        enfrentamiento = Enfrentamiento.objects.create(
+            juego=self.juego,
+            jugador_1=self.jugador_a,
+            jugador_2=self.jugador_b,
+            ganador=self.jugador_a,
+            resultado=resultado,
+        )
+
+        resultado.delete()
+        enfrentamiento.refresh_from_db()
+
+        self.assertIsNone(enfrentamiento.resultado)
+        self.assertTrue(
+            Enfrentamiento.objects.filter(pk=enfrentamiento.pk).exists(),
         )
 
 

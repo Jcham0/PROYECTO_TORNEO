@@ -40,6 +40,10 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
+La migración añade el vínculo opcional entre `Enfrentamiento` y `Resultado`.
+Los enfrentamientos anteriores quedan sin resultado; no se asignan resultados
+existentes automáticamente.
+
 ## Datos de prueba
 
 Después de aplicar las migraciones, crea o actualiza los datos de demostración
@@ -67,6 +71,16 @@ Contraseña: `DemoTorneo2026!`. Solo se asigna al crear una cuenta demo nueva;
 el comando no cambia la contraseña de cuentas que ya existan. Son credenciales
 para desarrollo local: no las uses en producción. Para acceder al panel como
 administrador, crea una cuenta independiente con `python manage.py createsuperuser`.
+
+### Acceso del profesor al panel de administración
+
+Panel: <http://127.0.0.1:8000/admin/>
+
+- **Usuario:** `JuanAntonio`
+- **Contraseña:** `Juanito7,.,.`
+
+Estas credenciales corresponden al entorno de evaluación del curso. No las
+reutilices en producción ni en otros servicios.
 
 ## Arranque del servidor
 

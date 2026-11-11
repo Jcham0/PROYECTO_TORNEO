@@ -2,16 +2,17 @@
 
 ## Contrato actual
 
-- **Modelos:** `Juego` (`nombre`, `descripcion`, `reglas`); `Participante`
-  (`usuario`, `nick`, `nivel` con opciones `amateur`, `normal` y `expert`,
-  predeterminado `amateur`; el email reside en `usuario.email`);
-  `Enfrentamiento` (`juego`, `jugador_1`, `jugador_2`, `ganador`, `fecha`,
-  `finalizado`); `Torneo` (`nombre`, `descripcion`,
+- **Modelos:** `Juego` (`nombre`, `descripcion`, `reglas`);
+  `Participante` (`usuario`, relación OneToOne con el usuario de Django,
+  `nick`, `nivel`); `Torneo` (`nombre`, `descripcion`,
   `inscripciones_abiertas`); `Inscripcion` (`torneo`, `participante`,
-  `fecha_inscripcion`), con una inscripción única por participante y torneo;
+  `fecha_inscripcion`), con unicidad por pareja torneo-participante;
   `Resultado` (`torneo`, `inscripcion_a`, `inscripcion_b`, `puntos_a`,
-  `puntos_b`, `fecha`, `ronda`), con cálculo de ganador y puntos de
-  clasificación 3/1/0.
+  `puntos_b`, `fecha`, `ronda`), valida las inscripciones y calcula el
+  ganador y los puntos de clasificación; `Enfrentamiento` (`juego`,
+  `jugador_1`, `jugador_2`, `ganador`, `fecha`, `finalizado`,
+  `resultado`), con `resultado` opcional y OneToOne hacia `Resultado`
+  mediante `SET_NULL`; valida la coincidencia de participantes y ganador.
 - **URLs:** `/admin/`; `torneo:inicio` (`/`); `torneo:zona_participante`
   (`/zona/`); `torneo:login` (`/login/`); `torneo:logout` (`/logout/`);
   `torneo:registro` (`/registro/`); `torneo:registrar_resultado`
@@ -43,7 +44,8 @@
   vinculada, busca por nick, nombre de usuario y email, ordena por nick y
   permite editar nick, nivel y email. `TorneoAdmin`
   permite administrar y abrir o cerrar inscripciones; `InscripcionAdmin`
-  permite consultar las inscripciones.
+  permite consultar las inscripciones. `EnfrentamientoAdmin` muestra el
+  resultado y carga sus relaciones para evitar consultas N+1.
 - **Acceso y visibilidad:** el panel `/admin/` y la gestión de cuentas de
   usuario se reservan al administrador y aplican las comprobaciones de acceso
   y permisos de Django. `torneo:zona_participante` requiere iniciar sesión y
@@ -491,3 +493,50 @@
 - Se corrigieron las referencias de documentación generadas que indicaban
   Django 6.1, para que correspondan a Django 5.2.18.
 - Siguiente paso pendiente: Fase 11 (Documentación final).
+
+## 11/11/2026 — Fase 7, pedido 4 de 4: vínculo entre enfrentamiento y resultado
+
+- Se añadió `Enfrentamiento.resultado`, una relación `OneToOneField` opcional a
+  `Resultado` con `SET_NULL`. `Enfrentamiento.clean()` valida que los
+  participantes coincidan en cualquier orden y que el ganador coincida con el
+  marcador; un empate exige no tener ganador. `save()` ejecuta `full_clean()`.
+- La migración `0006_enfrentamiento_resultado.py` solo añade el campo. Los
+  enfrentamientos previos quedan con `resultado=NULL`; no se intentó deducir ni
+  migrar asociaciones históricas. La base actual no tenía enfrentamientos.
+- `EnfrentamientoAdmin` muestra el resultado y usa `list_select_related` para
+  cargarlo junto con torneo, inscripciones y participantes. Las pruebas nuevas
+  cubren seis escenarios de integridad, eliminación del resultado y consultas
+  estables del admin. No se modificaron vistas, formularios, rutas, plantillas,
+  clasificación ni gráficas.
+- `poblar_datos` se ejecutó dos veces en la base actual y en una SQLite nueva;
+  la segunda ejecución no duplicó datos. La suite completa pasó 82 pruebas;
+  `python manage.py check` y `python manage.py makemigrations --check`
+  finalizaron correctamente. Sin dependencias nuevas.
+- Se actualizaron README y MEMORIA. Revisión manual pendiente de la memoria:
+  modelo de datos y esquema, evolutivos y número de pruebas (82).
+- Siguiente paso pendiente: Fase 11 (Documentación final).
+
+## 11/11/2026 — Fase 11, pedido 1 de 2: diagrama entidad-relación en la memoria
+
+- Se insertó en `MEMORIA.md` la imagen `assets/diagrama_ER.png` en el apartado
+  «Modelo de datos» y se añadió una descripción de las relaciones entre
+  `Torneo`, `Participante`, `Enfrentamiento` y `Resultado`.
+- Se verificó que el PNG existe y corresponde a los modelos y relaciones
+  definidos en `torneo/models.py`. No se modificaron modelos ni código.
+- Siguiente paso pendiente: Fase 11, pedido 2 de 2 (cierre documental y auditoría final).
+
+## 11/11/2026 — Fase 11, pedido 2 de 2: cierre de documentación y auditoría final
+
+- Se completó la documentación técnica final en `README.md` y `MEMORIA.md`.
+  La memoria incorpora el diagrama entidad-relación validado y la explicación
+  de las relaciones entre modelos; también incluye el acceso de evaluación al
+  panel de administración.
+- Se revisó la arquitectura y el código de modelos, formularios, vistas,
+  administración y rutas, además de la consistencia de las plantillas y la
+  documentación frente al contrato del proyecto.
+- La suite completa registra 82 pruebas aprobadas; `python manage.py check` y
+  `python manage.py makemigrations --check` finalizaron correctamente.
+- Se cotejaron el modelo de datos, el diagrama E-R, los evolutivos y el número
+  de pruebas documentado con el estado verificado del proyecto.
+- Fase 11 (Documentación final) completada.
+- Siguiente paso pendiente: Ninguno; proyecto finalizado.

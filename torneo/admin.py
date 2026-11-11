@@ -99,10 +99,19 @@ class EnfrentamientoAdmin(admin.ModelAdmin):
         'jugador_1',
         'jugador_2',
         'ganador',
+        'resultado',
         'finalizado',
         'fecha',
     )
-    list_select_related = ('juego', 'jugador_1', 'jugador_2', 'ganador')
+    list_select_related = (
+        'juego',
+        'jugador_1',
+        'jugador_2',
+        'ganador',
+        'resultado__torneo',
+        'resultado__inscripcion_a__participante',
+        'resultado__inscripcion_b__participante',
+    )
 
 
 @admin.register(Resultado)

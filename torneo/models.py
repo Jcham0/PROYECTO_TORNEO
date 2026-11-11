@@ -189,6 +189,46 @@ class Enfrentamiento(models.Model):
     )
     fecha = models.DateTimeField(auto_now_add=True)
     finalizado = models.BooleanField(default=False)
+    resultado = models.OneToOneField(
+        Resultado,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='enfrentamiento',
+    )
+
+    def clean(self):
+        super().clean()
+        if not self.resultado_id:
+            return
+
+        resultado = self.resultado
+        jugadores = {self.jugador_1_id, self.jugador_2_id}
+        participantes = {
+            resultado.inscripcion_a.participante_id,
+            resultado.inscripcion_b.participante_id,
+        }
+        errores = {}
+
+        if jugadores != participantes:
+            errores['resultado'] = (
+                'Los jugadores del enfrentamiento deben coincidir con '
+                'los participantes del resultado.'
+            )
+        if self.ganador_id != (
+            resultado.ganador.pk if resultado.ganador is not None else None
+        ):
+            errores['ganador'] = (
+                'El ganador del enfrentamiento debe coincidir con '
+                'el ganador del resultado.'
+            )
+
+        if errores:
+            raise ValidationError(errores)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.jugador_1} vs {self.jugador_2} ({self.juego})'

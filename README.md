@@ -69,18 +69,7 @@ contraseña:
 
 Contraseña: `DemoTorneo2026!`. Solo se asigna al crear una cuenta demo nueva;
 el comando no cambia la contraseña de cuentas que ya existan. Son credenciales
-para desarrollo local: no las uses en producción. Para acceder al panel como
-administrador, crea una cuenta independiente con `python manage.py createsuperuser`.
-
-### Acceso del profesor al panel de administración
-
-Panel: <http://127.0.0.1:8000/admin/>
-
-- **Usuario:** `JuanAntonio`
-- **Contraseña:** `Juanito7,.,.`
-
-Estas credenciales corresponden al entorno de evaluación del curso. No las
-reutilices en producción ni en otros servicios.
+para desarrollo local: no las uses en producción.
 
 ## Arranque del servidor
 

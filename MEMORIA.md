@@ -202,16 +202,6 @@ se definan y verifiquen en sus fases.
 - `/admin/torneo/resultado/`: la vista `ResultadoAdmin` permite consultar,
   buscar y ordenar resultados.
 
-### 6.3 Acceso del profesor al panel de administración
-
-El panel de evaluación está disponible en <http://127.0.0.1:8000/admin/>.
-Las credenciales facilitadas para el curso son:
-
-- **Usuario:** `JuanAntonio`
-- **Contraseña:** `Juanito7,.,.`
-
-Estas credenciales son exclusivamente para el entorno de evaluación y no deben
-reutilizarse en producción ni en otros servicios.
 
 ## Criterios de acceso y visibilidad
 

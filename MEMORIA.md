@@ -3,9 +3,6 @@
 ## Portada
 
 - **Título:** Aplicación web para la gestión de un torneo de videojuegos
-- **Propuesta:** C
-- **Alumno/a:** [Nombre del alumno o alumna]
-- **Profesor/a:** [Nombre del profesor o profesora]
 - **Fecha:** 03/11/2026
 
 ## Índice
@@ -16,7 +13,6 @@
 4. Modelo de datos
 5. Requisitos funcionales
 6. Vistas y rutas
-   - 6.3 Acceso del profesor al panel de administración
 7. Criterios de acceso y visibilidad
 8. Manual de instalación
 9. Retos técnicos e incidencias
